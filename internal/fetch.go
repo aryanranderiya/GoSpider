@@ -10,9 +10,10 @@ import (
 
 func Fetch(url string, wg *sync.WaitGroup, queue *Queue) {
 	wg.Add(1)
+	defer wg.Done() // Always call Done, even if there's an error
 
-	// Create HTTP client with random proxy
-	client := utils.CreateHTTPClientWithProxy()
+	// Create HTTP client with tested proxy fallback
+	client := utils.CreateHTTPClientWithTestedProxy()
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("User-Agent", "GoSpider/1.0")
 
@@ -52,13 +53,11 @@ func Fetch(url string, wg *sync.WaitGroup, queue *Queue) {
 	markdown := ConvertToMarkdown(string(body), url)
 	SaveMarkdownToFile(markdown, url)
 
-	urls := utils.ExtractURLs(string(body))
+	urls := utils.ExtractURLs(markdown)
 
 	// Iterate over all urls and add to the queue for processing
 	for _, url := range urls {
 		fmt.Println("Found URL:", url)
 		queue.Enqueue(url)
 	}
-
-	wg.Done()
 }

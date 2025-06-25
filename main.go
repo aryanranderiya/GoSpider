@@ -27,7 +27,7 @@ func main() {
 		return
 	}
 
-	fmt.Println("welcome to gospider by aryan randeriya")
+	fmt.Println("\nwelcome to gospider by aryan randeriya\n")
 	fmt.Printf("Starting URL: %s\n", *startURL)
 	fmt.Printf("Max domains: %d\n", *maxDomains)
 	fmt.Printf("Workers: %d\n", *numWorkers)
@@ -61,15 +61,15 @@ func main() {
 
 		if !successfullyPopped {
 			consecutiveEmptyChecks++
-			
+
 			// Give workers time to discover and add new URLs
 			time.Sleep(100 * time.Millisecond)
-			
+
 			// If queue has been empty for multiple checks, wait for workers
 			if consecutiveEmptyChecks >= 5 {
 				// Wait for all active workers to complete
 				wg.Wait()
-				
+
 				// Final check after workers are done
 				url, successfullyPopped = queue.Dequeue()
 				if !successfullyPopped {
