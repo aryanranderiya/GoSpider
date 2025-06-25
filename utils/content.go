@@ -1,6 +1,8 @@
 package utils
 
-import "strings"
+import (
+	"strings"
+)
 
 // isHTML checks if the content type is HTML
 func IsHTML(contentType string) bool {

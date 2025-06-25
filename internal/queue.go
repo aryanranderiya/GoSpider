@@ -2,8 +2,7 @@ package internal
 
 import (
 	"fmt"
-	"net/url"
-	"strings"
+	"gospider/utils"
 	"sync"
 )
 
@@ -34,8 +33,10 @@ func (q *Queue) Enqueue(urlStr string) {
 	}
 
 	// Extract domain from URL
-	parsedURL, _ := url.Parse(urlStr)
-	domain := strings.TrimPrefix(parsedURL.Host, "www.")
+	domain, valid := utils.ExtractDomain(urlStr)
+	if !valid {
+		return
+	}
 
 	// Check if we've reached max domains and this is a new domain
 	if !q.domains[domain] && len(q.domains) >= q.maxDomains {
