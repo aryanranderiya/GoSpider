@@ -1,30 +1,48 @@
 package internal
 
 import (
-	"container/list" // Doubly linked list package
+	"fmt"
+	"sync"
 )
 
-// Queue of urls to fetch and scrape
 type Queue struct {
-	urls *list.List
+	urls []string
+	mu   sync.Mutex
 }
 
-// Create a new queue object
+// Create a new queue
 func NewQueue() *Queue {
-	return &Queue{urls: list.New()}
+	return &Queue{urls: make([]string, 0)}
 }
 
-// Insert url at the ending
+// Add URL to the end of the queue
 func (q *Queue) Enqueue(url string) {
-	q.urls.PushBack(url)
+	q.mu.Lock()
+	defer q.mu.Unlock()
+
+	q.urls = append(q.urls, url)
+	fmt.Printf("Enqueued: %s\n", url)
 }
 
-// Remove element from the front
+// Remove URL from the front
 func (q *Queue) Dequeue() (string, bool) {
-	front := q.urls.Front()
-	if front == nil {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+
+	if len(q.urls) == 0 {
+		fmt.Println("Queue is empty. No more elements to dequeue")
 		return "", false
 	}
-	q.urls.Remove(front)
-	return front.Value.(string), true
+
+	url := q.urls[0]
+	q.urls = q.urls[1:]
+	fmt.Printf("Dequeued: %s\n", url)
+	return url, true
+}
+
+// Length of the queue
+func (q *Queue) Len() int {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	return len(q.urls)
 }
