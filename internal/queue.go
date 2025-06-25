@@ -90,3 +90,10 @@ func (q *Queue) VisitedCount() int {
 	defer q.mu.Unlock()
 	return len(q.visited)
 }
+
+// Check if crawling should stop (domain limit reached and queue empty)
+func (q *Queue) IsCrawlingComplete() bool {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	return len(q.domains) >= q.maxDomains && len(q.urls) == 0
+}

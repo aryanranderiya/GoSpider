@@ -43,6 +43,17 @@ func main() {
 		url, successfullyPopped := queue.Dequeue()
 
 		if !successfullyPopped {
+			// Queue is empty - check if we've hit the domain limit
+			if queue.IsCrawlingComplete() {
+				fmt.Println("Domain limit reached and no more URLs to process. Waiting for workers to finish...")
+				wg.Wait()
+				// Double-check after workers finish
+				if queue.IsCrawlingComplete() {
+					fmt.Println("Crawling complete - domain limit reached.")
+					break
+				}
+			}
+
 			// Queue is empty - give workers some time to finish and add more URLs
 			time.Sleep(100 * time.Millisecond)
 
@@ -55,8 +66,12 @@ func main() {
 				// Final check after all workers are done
 				url, successfullyPopped = queue.Dequeue()
 				if !successfullyPopped {
-					// Truly done now
-					fmt.Println("All URLs processed. Shutting down...")
+					// Check if crawling is complete or just no more URLs
+					if queue.IsCrawlingComplete() {
+						fmt.Println("Crawling complete - domain limit reached.")
+					} else {
+						fmt.Println("All URLs processed. Shutting down...")
+					}
 					break
 				}
 			}
