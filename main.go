@@ -56,7 +56,7 @@ func main() {
 
 	// Create a channel to communicate URLs between main thread and worker threads
 	urlChannel := make(chan string, 10000) // much larger buffer for 1000 workers
-	var wg sync.WaitGroup                // WaitGroup tracks how many workers are currently processing URLs
+	var wg sync.WaitGroup                  // WaitGroup tracks how many workers are currently processing URLs
 
 	// Start multiple worker goroutines (run in background)
 	if *verbose {
@@ -76,7 +76,12 @@ func main() {
 			if !*verbose {
 				elapsed := time.Since(startTime)
 				processedCount := queue.ProcessedCount()
+				completedCount := queue.CompletedCount()
 				domainsCount := queue.DomainsCount()
+				queueSize := queue.Len()
+
+				// Calculate processing rate
+				rate := float64(completedCount) / elapsed.Seconds()
 
 				// Calculate max values for display
 				maxUrlsDisplay := "∞"
@@ -84,8 +89,16 @@ func main() {
 					maxUrlsDisplay = fmt.Sprintf("%d", *maxURLs)
 				}
 
-				fmt.Printf("Progress: %d/%s URLs sent to workers, %d/%d domains, %d discovered but not processed (%.1fs)\n",
-					processedCount, maxUrlsDisplay, domainsCount, *maxDomains, queue.Len(), elapsed.Seconds())
+				// Calculate percentage for domains
+				domainPercent := float64(domainsCount) / float64(*maxDomains) * 100
+
+				// Format time
+				minutes := int(elapsed.Minutes())
+				seconds := int(elapsed.Seconds()) % 60
+				timeStr := fmt.Sprintf("%dm%ds", minutes, seconds)
+
+				fmt.Printf("🕷️  Processing: %d/%s URLs sent to workers | ✅ %d completed | 🌐 %d/%d domains (%.1f%%) | 📋 %d queued | ⚡ %.1f URLs/sec | ⏱️ %s\n",
+					processedCount, maxUrlsDisplay, completedCount, domainsCount, *maxDomains, domainPercent, queueSize, rate, timeStr)
 			}
 		}
 	}()
@@ -147,7 +160,12 @@ func main() {
 	if !*verbose {
 		elapsed := time.Since(startTime)
 		processedCount := queue.ProcessedCount()
+		completedCount := queue.CompletedCount()
 		domainsCount := queue.DomainsCount()
+		queueSize := queue.Len()
+
+		// Calculate processing rate
+		rate := float64(completedCount) / elapsed.Seconds()
 
 		// Calculate max values for display
 		maxUrlsDisplay := "∞"
@@ -155,20 +173,66 @@ func main() {
 			maxUrlsDisplay = fmt.Sprintf("%d", *maxURLs)
 		}
 
-		fmt.Printf("Final: %d/%s URLs sent to workers, %d/%d domains, %d discovered but not processed (%.1fs)\n",
-			processedCount, maxUrlsDisplay, domainsCount, *maxDomains, queue.Len(), elapsed.Seconds())
+		// Calculate percentage for domains
+		domainPercent := float64(domainsCount) / float64(*maxDomains) * 100
+
+		// Format time
+		minutes := int(elapsed.Minutes())
+		seconds := int(elapsed.Seconds()) % 60
+		timeStr := fmt.Sprintf("%dm%ds", minutes, seconds)
+
+		fmt.Printf("🏁 Final: %d/%s URLs sent to workers | ✅ %d completed | 🌐 %d/%d domains (%.1f%%) | 📋 %d queued | ⚡ %.1f URLs/sec | ⏱️ %s\n",
+			processedCount, maxUrlsDisplay, completedCount, domainsCount, *maxDomains, domainPercent, queueSize, rate, timeStr)
 	}
 
 	// Calculate total execution time
 	totalTime := time.Since(startTime)
-	urlsPerSecond := float64(queue.ProcessedCount()) / totalTime.Seconds()
+	completedCount := queue.CompletedCount()
+	processedCount := queue.ProcessedCount()
+	visitedCount := queue.VisitedCount()
+	domainsCount := queue.DomainsCount()
+	queueSize := queue.Len()
 
-	// Print final statistics
-	fmt.Printf("\n=== Crawling Complete ===\n")
-	fmt.Printf("Total execution time: %.2fs\n", totalTime.Seconds())
-	fmt.Printf("Total unique URLs discovered: %d\n", queue.VisitedCount())
-	fmt.Printf("Total URLs sent to workers: %d\n", queue.ProcessedCount())
-	fmt.Printf("Total domains processed: %d\n", queue.DomainsCount())
-	fmt.Printf("URLs remaining in queue: %d\n", queue.Len())
-	fmt.Printf("Processing rate: %.2f URLs/second\n", urlsPerSecond)
+	urlsPerSecond := float64(completedCount) / totalTime.Seconds()
+
+	// Format execution time
+	hours := int(totalTime.Hours())
+	minutes := int(totalTime.Minutes()) % 60
+	seconds := int(totalTime.Seconds()) % 60
+
+	var timeDisplay string
+	if hours > 0 {
+		timeDisplay = fmt.Sprintf("%dh %dm %ds", hours, minutes, seconds)
+	} else if minutes > 0 {
+		timeDisplay = fmt.Sprintf("%dm %ds", minutes, seconds)
+	} else {
+		timeDisplay = fmt.Sprintf("%.1fs", totalTime.Seconds())
+	}
+
+	// Calculate success rate
+	successRate := float64(completedCount) / float64(processedCount) * 100
+	if processedCount == 0 {
+		successRate = 0
+	}
+
+	// Print final statistics with emojis and better formatting
+	fmt.Printf("\n🎉 === Crawling Complete === 🎉\n")
+	fmt.Printf("⏱️  Total execution time: %s\n", timeDisplay)
+	fmt.Printf("🌐 Unique URLs discovered: %s\n", formatNumber(visitedCount))
+	fmt.Printf("📤 URLs sent to workers: %s\n", formatNumber(processedCount))
+	fmt.Printf("✅ URLs successfully processed: %s (%.1f%% success rate)\n", formatNumber(completedCount), successRate)
+	fmt.Printf("🏠 Domains processed: %s\n", formatNumber(domainsCount))
+	fmt.Printf("📋 URLs remaining in queue: %s\n", formatNumber(queueSize))
+	fmt.Printf("⚡ Processing rate: %.1f URLs/second\n", urlsPerSecond)
+}
+
+// formatNumber adds commas to large numbers for better readability
+func formatNumber(n int) string {
+	if n < 1000 {
+		return fmt.Sprintf("%d", n)
+	}
+	if n < 1000000 {
+		return fmt.Sprintf("%d,%03d", n/1000, n%1000)
+	}
+	return fmt.Sprintf("%d,%03d,%03d", n/1000000, (n%1000000)/1000, n%1000)
 }

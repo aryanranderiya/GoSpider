@@ -13,6 +13,7 @@ type Queue struct {
 	maxDomains    int
 	maxURLs       int
 	processedURLs int
+	completedURLs int // Successfully processed URLs
 	mu            sync.Mutex
 	verbose       bool
 }
@@ -146,4 +147,18 @@ func (q *Queue) IsCrawlingComplete() bool {
 		return true
 	}
 	return len(q.domains) >= q.maxDomains && len(q.urls) == 0
+}
+
+// Mark a URL as successfully completed
+func (q *Queue) MarkCompleted() {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	q.completedURLs++
+}
+
+// Get the total number of URLs successfully completed
+func (q *Queue) CompletedCount() int {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	return q.completedURLs
 }

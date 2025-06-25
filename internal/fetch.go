@@ -56,15 +56,28 @@ func Fetch(url string, wg *sync.WaitGroup, queue *Queue, downloadImages bool, ve
 
 	// Process HTML content
 	markdown := ConvertToMarkdown(string(body), url)
-	go SaveMarkdownToFile(markdown, url, verbose)
+	SaveMarkdownToFile(markdown, url, verbose)
 
-	urls := utils.ExtractURLs(markdown)
+	urls := utils.ExtractURLs(string(body))
+	urls_md := utils.ExtractURLs(markdown)
 
-	// Iterate over all urls and add to the queue for processing
-	for _, url := range urls {
+	// Combine URLs from both sources and remove duplicates
+	urlSet := make(map[string]bool)
+	for _, u := range urls {
+		urlSet[u] = true
+	}
+	for _, u := range urls_md {
+		urlSet[u] = true
+	}
+
+	// Iterate over all unique urls and add to the queue for processing
+	for url := range urlSet {
 		if verbose {
 			fmt.Println("Found URL:", url)
 		}
 		queue.Enqueue(url)
 	}
+
+	// Mark this URL as successfully completed
+	queue.MarkCompleted()
 }
