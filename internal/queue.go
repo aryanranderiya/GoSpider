@@ -2,39 +2,54 @@ package internal
 
 import (
 	"fmt"
+	"net/url"
+	"strings"
 	"sync"
 )
 
 type Queue struct {
-	urls    []string
-	visited map[string]bool // Track URLs we've already seen
-	mu      sync.Mutex
+	urls       []string
+	visited    map[string]bool
+	domains    map[string]bool
+	maxDomains int
+	mu         sync.Mutex
 }
 
-// Create a new queue
-func NewQueue() *Queue {
+func NewQueue(maxDomains int) *Queue {
 	return &Queue{
-		urls:    make([]string, 0),
-		visited: make(map[string]bool),
+		urls:       make([]string, 0),
+		visited:    make(map[string]bool),
+		domains:    make(map[string]bool),
+		maxDomains: maxDomains,
 	}
 }
 
-// Add URL to the end of the queue
-func (q *Queue) Enqueue(url string) {
+func (q *Queue) Enqueue(urlStr string) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
 
-	// Check if URL has already been visited or queued
-	if q.visited[url] {
-		fmt.Printf("Skipping duplicate URL: %s (Queue size: %d)\n", url, len(q.urls))
+	// Skip if already visited
+	if q.visited[urlStr] {
 		return
 	}
 
-	// Mark URL as visited and add to queue
-	q.visited[url] = true
-	q.urls = append(q.urls, url)
-	queueSize := len(q.urls)
-	fmt.Printf("Enqueued: %s (Queue size: %d)\n", url, queueSize)
+	// Extract domain from URL
+	parsedURL, _ := url.Parse(urlStr)
+	domain := strings.TrimPrefix(parsedURL.Host, "www.")
+
+	// Check if we've reached max domains and this is a new domain
+	if !q.domains[domain] && len(q.domains) >= q.maxDomains {
+		fmt.Printf("Skipping new domain (max %d reached): %s\n", q.maxDomains, domain)
+		return
+	}
+
+	// Track the domain
+	q.domains[domain] = true
+
+	// Add to queue
+	q.visited[urlStr] = true
+	q.urls = append(q.urls, urlStr)
+	fmt.Printf("Enqueued: %s (Queue size: %d, Domains: %d)\n", urlStr, len(q.urls), len(q.domains))
 }
 
 // Remove URL from the front
@@ -62,10 +77,10 @@ func (q *Queue) Len() int {
 }
 
 // Check if a URL has been visited
-func (q *Queue) HasVisited(url string) bool {
+func (q *Queue) HasVisited(urlStr string) bool {
 	q.mu.Lock()
 	defer q.mu.Unlock()
-	return q.visited[url]
+	return q.visited[urlStr]
 }
 
 // Get the total number of unique URLs visited

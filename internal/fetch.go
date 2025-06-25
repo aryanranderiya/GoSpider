@@ -6,13 +6,16 @@ import (
 	"io"
 	"net/http"
 	"sync"
+	"time"
 )
 
 func Fetch(url string, wg *sync.WaitGroup, queue *Queue) {
 	wg.Add(1)
 
-	client := &http.Client{}
-	req, _ := http.NewRequest("GET", url, nil) // method, url, body
+	client := &http.Client{
+		Timeout: 10 * time.Second, // 10 second timeout to prevent hanging
+	}
+	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("User-Agent", "GoSpider/1.0")
 
 	response, err := client.Do(req)
