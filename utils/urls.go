@@ -8,9 +8,21 @@ import (
 )
 
 func ExtractURLs(text string) []string {
-	// Basic regex to match HTTP/HTTPS URLs
-	re := regexp.MustCompile(`https?://[^\s"'>]+`)
-	return re.FindAllString(text, -1)
+	// Improved regex to match HTTP/HTTPS URLs without trailing punctuation
+	re := regexp.MustCompile(`https?://[^\s"'>\)]+`)
+	matches := re.FindAllString(text, -1)
+	
+	// Clean up URLs by removing trailing punctuation
+	var cleanURLs []string
+	for _, match := range matches {
+		// Remove trailing punctuation like ), ], }, ., ,, ;, :, !, ?
+		cleaned := strings.TrimRight(match, ".,;:!?)]}")
+		if cleaned != "" {
+			cleanURLs = append(cleanURLs, cleaned)
+		}
+	}
+	
+	return cleanURLs
 }
 
 func ExtractDomain(urlStr string, verbose bool) (string, bool) {

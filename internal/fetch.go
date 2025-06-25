@@ -9,8 +9,8 @@ import (
 )
 
 func Fetch(url string, wg *sync.WaitGroup, queue *Queue, verbose bool) {
-	// Create HTTP client with tested proxy fallback
-	client := utils.CreateHTTPClientWithTestedProxy(verbose)
+	// Use shared HTTP client with connection pooling
+	client := GetHTTPClient(verbose)
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("User-Agent", "GoSpider/1.0")
 
@@ -40,7 +40,7 @@ func Fetch(url string, wg *sync.WaitGroup, queue *Queue, verbose bool) {
 
 	// Check if it's an image
 	if utils.IsImage(contentType) {
-		utils.DownloadImage(body, url, verbose)
+		go utils.DownloadImage(body, url, verbose)
 		return
 	}
 
@@ -54,7 +54,7 @@ func Fetch(url string, wg *sync.WaitGroup, queue *Queue, verbose bool) {
 
 	// Process HTML content
 	markdown := ConvertToMarkdown(string(body), url)
-	SaveMarkdownToFile(markdown, url, verbose)
+	go SaveMarkdownToFile(markdown, url, verbose)
 
 	urls := utils.ExtractURLs(markdown)
 

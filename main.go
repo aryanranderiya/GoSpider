@@ -53,7 +53,7 @@ func main() {
 	queue.Enqueue(*startURL) // Add the starting URL to begin crawling
 
 	// Create a channel to communicate URLs between main thread and worker threads
-	urlChannel := make(chan string, 200) // buffered channel with larger capacity
+	urlChannel := make(chan string, 10000) // much larger buffer for 1000 workers
 	var wg sync.WaitGroup                // WaitGroup tracks how many workers are currently processing URLs
 
 	// Start multiple worker goroutines (run in background)
@@ -98,7 +98,7 @@ func main() {
 			consecutiveEmptyChecks++
 
 			// Give workers time to discover and add new URLs
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(10 * time.Millisecond)
 
 			// If queue has been empty for multiple checks, wait for workers
 			if consecutiveEmptyChecks >= 5 {

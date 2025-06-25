@@ -220,7 +220,7 @@ func testProxy(proxyURL *url.URL) bool {
 // CreateHTTPClientWithTestedProxy creates an HTTP client with tested proxy fallback strategy
 func CreateHTTPClientWithTestedProxy(verbose bool) *http.Client {
 	client := &http.Client{
-		Timeout: 15 * time.Second, // Increased timeout for proxy testing
+		Timeout: 5 * time.Second, // Faster failures to prevent stalling
 	}
 
 	// Only use proxy if explicitly enabled and available
@@ -244,9 +244,16 @@ func CreateHTTPClientWithTestedProxy(verbose bool) *http.Client {
 				}
 				if testProxy(proxyURL) {
 					transport := &http.Transport{
-						Proxy:               http.ProxyURL(proxyURL),
-						IdleConnTimeout:     30 * time.Second,
-						TLSHandshakeTimeout: 10 * time.Second,
+						Proxy:                 http.ProxyURL(proxyURL),
+						MaxIdleConns:          2000,
+						MaxIdleConnsPerHost:   100,
+						MaxConnsPerHost:       100,
+						IdleConnTimeout:       90 * time.Second,
+						TLSHandshakeTimeout:   5 * time.Second,
+						ResponseHeaderTimeout: 5 * time.Second,
+						ExpectContinueTimeout: 1 * time.Second,
+						DisableKeepAlives:     false,
+						DisableCompression:    false,
 					}
 					client.Transport = transport
 					if verbose {
@@ -269,9 +276,17 @@ func CreateHTTPClientWithTestedProxy(verbose bool) *http.Client {
 		}
 	}
 
-	// Fallback to direct connection
+	// Optimized direct connection with connection pooling
 	client.Transport = &http.Transport{
-		IdleConnTimeout: 30 * time.Second,
+		MaxIdleConns:          2000,
+		MaxIdleConnsPerHost:   100,
+		MaxConnsPerHost:       100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   5 * time.Second,
+		ResponseHeaderTimeout: 5 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		DisableKeepAlives:     false,
+		DisableCompression:    false,
 	}
 	return client
 }
