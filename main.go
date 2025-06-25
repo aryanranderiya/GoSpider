@@ -13,8 +13,9 @@ func main() {
 	// Define command line flags
 	startURL := flag.String("url", "", "Starting URL to crawl (required)")
 	maxDomains := flag.Int("domains", 100, "Maximum number of domains to crawl (default 100)")
+	maxURLs := flag.Int("urls", 1000, "Maximum number of URLs to process (default 1000). 0 = unlimited")
 	numWorkers := flag.Int("workers", 5, "Number of concurrent workers (default 5)")
-	useProxies := flag.Bool("proxies", false, "Use proxies from proxies.txt file")
+	useProxies := flag.Bool("proxies", true, "Use proxies from proxies.txt file")
 
 	// Parse command line flags
 	flag.Parse()
@@ -22,14 +23,15 @@ func main() {
 	// Validate required flags
 	if *startURL == "" {
 		fmt.Println("Error: -url flag is required")
-		fmt.Println("Usage: go run main.go -url=https://example.com [-domains=3] [-workers=5]")
+		fmt.Println("Usage: go run main.go -url=https://example.com [-domains=3] [-urls=1000] [-workers=5]")
 		flag.PrintDefaults()
 		return
 	}
 
-	fmt.Println("\nwelcome to gospider by aryan randeriya\n")
+	fmt.Println("\nwelcome to gospider by aryan randeriya")
 	fmt.Printf("Starting URL: %s\n", *startURL)
 	fmt.Printf("Max domains: %d\n", *maxDomains)
+	fmt.Printf("Max URLs: %d\n", *maxURLs)
 	fmt.Printf("Workers: %d\n", *numWorkers)
 	fmt.Printf("Using proxies: %t\n", *useProxies)
 
@@ -40,7 +42,7 @@ func main() {
 	}
 
 	// Initialize your custom queue - this stores URLs waiting to be processed
-	queue := internal.NewQueue(*maxDomains)
+	queue := internal.NewQueue(*maxDomains, *maxURLs)
 	queue.Enqueue(*startURL) // Add the starting URL to begin crawling
 
 	// Create a channel to communicate URLs between main thread and worker threads
@@ -104,5 +106,6 @@ func main() {
 	// Print final statistics
 	fmt.Printf("\n=== Crawling Complete ===\n")
 	fmt.Printf("Total unique URLs discovered: %d\n", queue.VisitedCount())
+	fmt.Printf("Total URLs processed: %d\n", queue.ProcessedCount())
 	fmt.Printf("URLs remaining in queue: %d\n", queue.Len())
 }

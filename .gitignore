@@ -1,3 +1,4 @@
 output
 .env
 clean_proxies.txt
+.claude
