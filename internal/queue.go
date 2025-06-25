@@ -7,16 +7,17 @@ import (
 )
 
 type Queue struct {
-	urls         []string
-	visited      map[string]bool
-	domains      map[string]bool
-	maxDomains   int
-	maxURLs      int
+	urls          []string
+	visited       map[string]bool
+	domains       map[string]bool
+	maxDomains    int
+	maxURLs       int
 	processedURLs int
-	mu           sync.Mutex
+	mu            sync.Mutex
+	verbose       bool
 }
 
-func NewQueue(maxDomains int, maxURLs int) *Queue {
+func NewQueue(maxDomains int, maxURLs int, verbose bool) *Queue {
 	return &Queue{
 		urls:          make([]string, 0),
 		visited:       make(map[string]bool),
@@ -24,6 +25,7 @@ func NewQueue(maxDomains int, maxURLs int) *Queue {
 		maxDomains:    maxDomains,
 		maxURLs:       maxURLs,
 		processedURLs: 0,
+		verbose:       verbose,
 	}
 }
 
@@ -38,19 +40,23 @@ func (q *Queue) Enqueue(urlStr string) {
 
 	// Check if we've reached max URLs limit
 	if q.maxURLs > 0 && q.processedURLs >= q.maxURLs {
-		fmt.Printf("Skipping URL (max %d URLs reached): %s\n", q.maxURLs, urlStr)
+		if q.verbose {
+			fmt.Printf("Skipping URL (max %d URLs reached): %s\n", q.maxURLs, urlStr)
+		}
 		return
 	}
 
 	// Extract domain from URL
-	domain, valid := utils.ExtractDomain(urlStr)
+	domain, valid := utils.ExtractDomain(urlStr, q.verbose)
 	if !valid {
 		return
 	}
 
 	// Check if we've reached max domains and this is a new domain
 	if !q.domains[domain] && len(q.domains) >= q.maxDomains {
-		fmt.Printf("Skipping new domain (max %d reached): %s\n", q.maxDomains, domain)
+		if q.verbose {
+			fmt.Printf("Skipping new domain (max %d reached): %s\n", q.maxDomains, domain)
+		}
 		return
 	}
 
@@ -62,7 +68,9 @@ func (q *Queue) Enqueue(urlStr string) {
 	// Add to queue
 	q.visited[urlStr] = true
 	q.urls = append(q.urls, urlStr)
-	fmt.Printf("Enqueued: %s (Queue size: %d, Domains: %d, Processed: %d/%d)\n", urlStr, len(q.urls), len(q.domains), q.processedURLs, q.maxURLs)
+	if q.verbose {
+		fmt.Printf("Enqueued: %s (Queue size: %d, Domains: %d, Processed: %d/%d)\n", urlStr, len(q.urls), len(q.domains), q.processedURLs, q.maxURLs)
+	}
 }
 
 // Remove URL from the front
@@ -72,12 +80,16 @@ func (q *Queue) Dequeue() (string, bool) {
 
 	// Check if we've reached max URLs limit
 	if q.maxURLs > 0 && q.processedURLs >= q.maxURLs {
-		fmt.Printf("Max URLs limit reached (%d/%d). Stopping crawl.\n", q.processedURLs, q.maxURLs)
+		if q.verbose {
+			fmt.Printf("Max URLs limit reached (%d/%d). Stopping crawl.\n", q.processedURLs, q.maxURLs)
+		}
 		return "", false
 	}
 
 	if len(q.urls) == 0 {
-		fmt.Println("Queue is empty. No more elements to dequeue (Queue size: 0)")
+		if q.verbose {
+			fmt.Println("Queue is empty. No more elements to dequeue (Queue size: 0)")
+		}
 		return "", false
 	}
 
@@ -85,7 +97,9 @@ func (q *Queue) Dequeue() (string, bool) {
 	q.urls = q.urls[1:]
 	q.processedURLs++
 	queueSize := len(q.urls)
-	fmt.Printf("Dequeued: %s (Queue size: %d, Processed: %d/%d)\n", url, queueSize, q.processedURLs, q.maxURLs)
+	if q.verbose {
+		fmt.Printf("Dequeued: %s (Queue size: %d, Processed: %d/%d)\n", url, queueSize, q.processedURLs, q.maxURLs)
+	}
 	return url, true
 }
 
@@ -110,6 +124,20 @@ func (q *Queue) VisitedCount() int {
 	return len(q.visited)
 }
 
+// Get the total number of URLs processed
+func (q *Queue) ProcessedCount() int {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	return q.processedURLs
+}
+
+// Get the total number of domains discovered
+func (q *Queue) DomainsCount() int {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	return len(q.domains)
+}
+
 // Check if crawling should stop (domain limit reached and queue empty, or URL limit reached)
 func (q *Queue) IsCrawlingComplete() bool {
 	q.mu.Lock()
@@ -118,11 +146,4 @@ func (q *Queue) IsCrawlingComplete() bool {
 		return true
 	}
 	return len(q.domains) >= q.maxDomains && len(q.urls) == 0
-}
-
-// Get the number of URLs processed
-func (q *Queue) ProcessedCount() int {
-	q.mu.Lock()
-	defer q.mu.Unlock()
-	return q.processedURLs
 }

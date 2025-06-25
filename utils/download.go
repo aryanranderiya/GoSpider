@@ -9,7 +9,7 @@ import (
 )
 
 // downloadImage saves an image to the images folder within the domain directory
-func DownloadImage(imageData []byte, urlStr string) {
+func DownloadImage(imageData []byte, urlStr string, verbose bool) {
 	parsedURL, _ := url.Parse(urlStr)
 
 	// Get domain
@@ -30,5 +30,7 @@ func DownloadImage(imageData []byte, urlStr string) {
 
 	filePath := filepath.Join(outputDir, filename)
 	os.WriteFile(filePath, imageData, 0644)
-	fmt.Printf("Downloaded: %s -> %s\n", urlStr, filePath)
+	if verbose {
+		fmt.Printf("Downloaded: %s -> %s\n", urlStr, filePath)
+	}
 }

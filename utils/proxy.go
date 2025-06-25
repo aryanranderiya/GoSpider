@@ -20,7 +20,7 @@ var (
 )
 
 // ParseProxies reads and cleans the proxy file, returning only valid IP:PORT entries
-func ParseProxies(filename string) ([]string, error) {
+func ParseProxies(filename string, verbose bool) ([]string, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open proxy file: %v", err)
@@ -35,7 +35,9 @@ func ParseProxies(filename string) ([]string, error) {
 	// Regex to match IP:PORT format anywhere in the line
 	ipPortRegex := regexp.MustCompile(`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d+)`)
 
-	fmt.Printf("Parsing proxy file: %s\n", filename)
+	if verbose {
+		fmt.Printf("Parsing proxy file: %s\n", filename)
+	}
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -73,12 +75,14 @@ func ParseProxies(filename string) ([]string, error) {
 		return nil, fmt.Errorf("error reading file: %v", err)
 	}
 
-	// Print statistics
-	fmt.Printf("\n=== Proxy Parsing Results ===\n")
-	fmt.Printf("Total lines processed: %d\n", totalLines)
-	fmt.Printf("Valid proxies found: %d\n", validLines)
-	fmt.Printf("Duplicates removed: %d\n", duplicates)
-	fmt.Printf("Final proxy count: %d\n", len(proxies))
+	// Print statistics only in verbose mode
+	if verbose {
+		fmt.Printf("\n=== Proxy Parsing Results ===\n")
+		fmt.Printf("Total lines processed: %d\n", totalLines)
+		fmt.Printf("Valid proxies found: %d\n", validLines)
+		fmt.Printf("Duplicates removed: %d\n", duplicates)
+		fmt.Printf("Final proxy count: %d\n", len(proxies))
+	}
 
 	return proxies, nil
 }
@@ -102,9 +106,9 @@ func WriteCleanProxies(proxies []string, filename string) error {
 }
 
 // GetRandomProxy returns a random proxy from the loaded list
-func GetRandomProxy() string {
+func GetRandomProxy(verbose bool) string {
 	if !proxiesInit {
-		LoadProxies("proxies.txt")
+		LoadProxies("proxies.txt", verbose)
 	}
 
 	if len(proxies) == 0 {
@@ -115,21 +119,25 @@ func GetRandomProxy() string {
 }
 
 // LoadProxies loads proxies from file into memory
-func LoadProxies(filename string) error {
+func LoadProxies(filename string, verbose bool) error {
 	if proxiesInit {
 		return nil // Already loaded
 	}
 
 	useProxies = true // Enable proxy usage when loading
-	parsed, err := ParseProxies(filename)
+	parsed, err := ParseProxies(filename, verbose)
 	if err != nil {
-		fmt.Printf("Warning: Could not load proxies: %v\n", err)
+		if verbose {
+			fmt.Printf("Warning: Could not load proxies: %v\n", err)
+		}
 		proxies = []string{} // Use empty list if loading fails
 		useProxies = false   // Disable proxies if loading fails
 	} else {
 		proxies = parsed
-		fmt.Printf("\n=== Proxy Loading Complete ===\n")
-		fmt.Printf("Successfully loaded %d proxies\n", len(proxies))
+		if verbose {
+			fmt.Printf("\n=== Proxy Loading Complete ===\n")
+			fmt.Printf("Successfully loaded %d proxies\n", len(proxies))
+		}
 	}
 
 	proxiesInit = true
@@ -137,7 +145,7 @@ func LoadProxies(filename string) error {
 }
 
 // CreateHTTPClientWithProxy creates an HTTP client with proxy fallback strategy
-func CreateHTTPClientWithProxy() *http.Client {
+func CreateHTTPClientWithProxy(verbose bool) *http.Client {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
@@ -147,11 +155,13 @@ func CreateHTTPClientWithProxy() *http.Client {
 		// Try up to 3 different proxies before falling back to direct connection
 		maxRetries := 3
 		for i := range maxRetries {
-			proxy := GetRandomProxy()
+			proxy := GetRandomProxy(verbose)
 			if proxy != "" {
 				proxyURL, err := url.Parse("http://" + proxy)
 				if err != nil {
-					fmt.Printf("Invalid proxy URL format, trying next: %s\n", proxy)
+					if verbose {
+						fmt.Printf("Invalid proxy URL format, trying next: %s\n", proxy)
+					}
 					continue
 				}
 
@@ -163,13 +173,19 @@ func CreateHTTPClientWithProxy() *http.Client {
 				}
 
 				client.Transport = transport
-				fmt.Printf("Using proxy (attempt %d/%d): %s\n", i+1, maxRetries, proxy)
+				if verbose {
+					fmt.Printf("Using proxy (attempt %d/%d): %s\n", i+1, maxRetries, proxy)
+				}
 				return client
 			}
 		}
-		fmt.Printf("All proxy attempts failed, falling back to direct connection\n")
+		if verbose {
+			fmt.Printf("All proxy attempts failed, falling back to direct connection\n")
+		}
 	} else {
-		fmt.Println("Using direct connection (proxies disabled)")
+		if verbose {
+			fmt.Println("Using direct connection (proxies disabled)")
+		}
 	}
 
 	// Fallback to direct connection
@@ -202,7 +218,7 @@ func testProxy(proxyURL *url.URL) bool {
 }
 
 // CreateHTTPClientWithTestedProxy creates an HTTP client with tested proxy fallback strategy
-func CreateHTTPClientWithTestedProxy() *http.Client {
+func CreateHTTPClientWithTestedProxy(verbose bool) *http.Client {
 	client := &http.Client{
 		Timeout: 15 * time.Second, // Increased timeout for proxy testing
 	}
@@ -212,16 +228,20 @@ func CreateHTTPClientWithTestedProxy() *http.Client {
 		// Try up to 3 different proxies before falling back to direct connection
 		maxRetries := 3
 		for i := 0; i < maxRetries; i++ {
-			proxy := GetRandomProxy()
+			proxy := GetRandomProxy(verbose)
 			if proxy != "" {
 				proxyURL, err := url.Parse("http://" + proxy)
 				if err != nil {
-					fmt.Printf("Invalid proxy URL format, trying next: %s\n", proxy)
+					if verbose {
+						fmt.Printf("Invalid proxy URL format, trying next: %s\n", proxy)
+					}
 					continue
 				}
 
 				// Test the proxy before using it
-				fmt.Printf("Testing proxy (attempt %d/%d): %s\n", i+1, maxRetries, proxy)
+				if verbose {
+					fmt.Printf("Testing proxy (attempt %d/%d): %s\n", i+1, maxRetries, proxy)
+				}
 				if testProxy(proxyURL) {
 					transport := &http.Transport{
 						Proxy:               http.ProxyURL(proxyURL),
@@ -229,16 +249,24 @@ func CreateHTTPClientWithTestedProxy() *http.Client {
 						TLSHandshakeTimeout: 10 * time.Second,
 					}
 					client.Transport = transport
-					fmt.Printf("✓ Proxy test successful, using: %s\n", proxy)
+					if verbose {
+						fmt.Printf("✓ Proxy test successful, using: %s\n", proxy)
+					}
 					return client
 				} else {
-					fmt.Printf("✗ Proxy test failed, trying next: %s\n", proxy)
+					if verbose {
+						fmt.Printf("✗ Proxy test failed, trying next: %s\n", proxy)
+					}
 				}
 			}
 		}
-		fmt.Printf("All proxy tests failed, falling back to direct connection\n")
+		if verbose {
+			fmt.Printf("All proxy tests failed, falling back to direct connection\n")
+		}
 	} else {
-		fmt.Println("Using direct connection (proxies disabled)")
+		if verbose {
+			fmt.Println("Using direct connection (proxies disabled)")
+		}
 	}
 
 	// Fallback to direct connection

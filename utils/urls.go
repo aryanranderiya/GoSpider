@@ -13,16 +13,20 @@ func ExtractURLs(text string) []string {
 	return re.FindAllString(text, -1)
 }
 
-func ExtractDomain(urlStr string) (string, bool) {
+func ExtractDomain(urlStr string, verbose bool) (string, bool) {
 	parsedURL, err := url.Parse(urlStr)
 	if err != nil || parsedURL.Host == "" {
-		fmt.Printf("Skipping invalid URL: %s\n", urlStr)
+		if verbose {
+			fmt.Printf("Skipping invalid URL: %s\n", urlStr)
+		}
 		return "", false
 	}
 
 	domain := strings.TrimPrefix(parsedURL.Host, "www.")
 	if domain == "" {
-		fmt.Printf("Skipping URL with empty domain: %s\n", urlStr)
+		if verbose {
+			fmt.Printf("Skipping URL with empty domain: %s\n", urlStr)
+		}
 		return "", false
 	}
 

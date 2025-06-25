@@ -25,11 +25,13 @@ func ConvertToMarkdown(input string, url string) string {
 }
 
 // SaveMarkdownToFile saves the markdown content to a file organized by domain
-func SaveMarkdownToFile(markdown, urlStr string) {
+func SaveMarkdownToFile(markdown, urlStr string, verbose bool) {
 	// Parse URL to get domain and path
 	parsedURL, err := url.Parse(urlStr)
 	if err != nil {
-		fmt.Println("Error parsing url to get domain and path", err)
+		if verbose {
+			fmt.Println("Error parsing url to get domain and path", err)
+		}
 	}
 
 	// Get domain (remove www. if present)
@@ -58,5 +60,7 @@ func SaveMarkdownToFile(markdown, urlStr string) {
 	// Write file
 	os.WriteFile(filePath, []byte(markdown), 0644)
 
-	fmt.Printf("Saved: %s -> %s\n", urlStr, filePath)
+	if verbose {
+		fmt.Printf("Saved: %s -> %s\n", urlStr, filePath)
+	}
 }
