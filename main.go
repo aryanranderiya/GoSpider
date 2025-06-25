@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gospider/internal"
 	"sync"
+	"time"
 )
 
 func main() {
@@ -42,14 +43,22 @@ func main() {
 		url, successfullyPopped := queue.Dequeue()
 
 		if !successfullyPopped {
-			// Queue is empty - wait a bit for workers to finish and potentially add more URLs
-			wg.Wait()
+			// Queue is empty - give workers some time to finish and add more URLs
+			time.Sleep(100 * time.Millisecond)
 
-			// Check again after workers are done
+			// Try again after a short wait
 			url, successfullyPopped = queue.Dequeue()
 			if !successfullyPopped {
-				// Still empty - we're done!
-				break
+				// Still empty - wait for all workers to finish
+				wg.Wait()
+
+				// Final check after all workers are done
+				url, successfullyPopped = queue.Dequeue()
+				if !successfullyPopped {
+					// Truly done now
+					fmt.Println("All URLs processed. Shutting down...")
+					break
+				}
 			}
 		}
 
