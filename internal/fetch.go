@@ -12,7 +12,7 @@ func Fetch(url string, wg *sync.WaitGroup, queue *Queue, verbose bool) {
 	// Use shared HTTP client with connection pooling
 	client := GetHTTPClient(verbose)
 	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Set("User-Agent", "GoSpider/1.0")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)")
 
 	response, err := client.Do(req)
 

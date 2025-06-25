@@ -82,7 +82,7 @@ func main() {
 					maxUrlsDisplay = fmt.Sprintf("%d", *maxURLs)
 				}
 
-				fmt.Printf("Progress: %d/%s URLs processed, %d/%d domains, %d in queue (%.1fs)\n",
+				fmt.Printf("Progress: %d/%s URLs sent to workers, %d/%d domains, %d discovered but not processed (%.1fs)\n",
 					processedCount, maxUrlsDisplay, domainsCount, *maxDomains, queue.Len(), elapsed.Seconds())
 			}
 		}
@@ -153,7 +153,7 @@ func main() {
 			maxUrlsDisplay = fmt.Sprintf("%d", *maxURLs)
 		}
 
-		fmt.Printf("Final: %d/%s URLs processed, %d/%d domains, %d in queue (%.1fs)\n",
+		fmt.Printf("Final: %d/%s URLs sent to workers, %d/%d domains, %d discovered but not processed (%.1fs)\n",
 			processedCount, maxUrlsDisplay, domainsCount, *maxDomains, queue.Len(), elapsed.Seconds())
 	}
 
@@ -165,7 +165,7 @@ func main() {
 	fmt.Printf("\n=== Crawling Complete ===\n")
 	fmt.Printf("Total execution time: %.2fs\n", totalTime.Seconds())
 	fmt.Printf("Total unique URLs discovered: %d\n", queue.VisitedCount())
-	fmt.Printf("Total URLs processed: %d\n", queue.ProcessedCount())
+	fmt.Printf("Total URLs sent to workers: %d\n", queue.ProcessedCount())
 	fmt.Printf("Total domains processed: %d\n", queue.DomainsCount())
 	fmt.Printf("URLs remaining in queue: %d\n", queue.Len())
 	fmt.Printf("Processing rate: %.2f URLs/second\n", urlsPerSecond)

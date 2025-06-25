@@ -220,7 +220,7 @@ func testProxy(proxyURL *url.URL) bool {
 // CreateHTTPClientWithTestedProxy creates an HTTP client with tested proxy fallback strategy
 func CreateHTTPClientWithTestedProxy(verbose bool) *http.Client {
 	client := &http.Client{
-		Timeout: 5 * time.Second, // Faster failures to prevent stalling
+		Timeout: 30 * time.Second, // Increased timeout for slow servers
 	}
 
 	// Only use proxy if explicitly enabled and available
@@ -246,11 +246,11 @@ func CreateHTTPClientWithTestedProxy(verbose bool) *http.Client {
 					transport := &http.Transport{
 						Proxy:                 http.ProxyURL(proxyURL),
 						MaxIdleConns:          2000,
-						MaxIdleConnsPerHost:   100,
-						MaxConnsPerHost:       100,
+						MaxIdleConnsPerHost:   50,  // Reduced to avoid overwhelming servers
+						MaxConnsPerHost:       50,  // Reduced to avoid overwhelming servers
 						IdleConnTimeout:       90 * time.Second,
-						TLSHandshakeTimeout:   5 * time.Second,
-						ResponseHeaderTimeout: 5 * time.Second,
+						TLSHandshakeTimeout:   10 * time.Second, // Increased for slow connections
+						ResponseHeaderTimeout: 20 * time.Second, // Increased for slow responses
 						ExpectContinueTimeout: 1 * time.Second,
 						DisableKeepAlives:     false,
 						DisableCompression:    false,
@@ -279,11 +279,11 @@ func CreateHTTPClientWithTestedProxy(verbose bool) *http.Client {
 	// Optimized direct connection with connection pooling
 	client.Transport = &http.Transport{
 		MaxIdleConns:          2000,
-		MaxIdleConnsPerHost:   100,
-		MaxConnsPerHost:       100,
+		MaxIdleConnsPerHost:   50,  // Reduced to avoid overwhelming servers
+		MaxConnsPerHost:       50,  // Reduced to avoid overwhelming servers
 		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   5 * time.Second,
-		ResponseHeaderTimeout: 5 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second, // Increased for slow connections
+		ResponseHeaderTimeout: 20 * time.Second, // Increased for slow responses
 		ExpectContinueTimeout: 1 * time.Second,
 		DisableKeepAlives:     false,
 		DisableCompression:    false,
