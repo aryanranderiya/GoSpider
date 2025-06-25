@@ -59,4 +59,9 @@ func main() {
 	// Close the channel to tell the worker goroutine to stop
 	// This signals that no more URLs will be sent
 	close(urlChannel)
+
+	// Print final statistics
+	fmt.Printf("\n=== Crawling Complete ===\n")
+	fmt.Printf("Total unique URLs discovered: %d\n", queue.VisitedCount())
+	fmt.Printf("URLs remaining in queue: %d\n", queue.Len())
 }

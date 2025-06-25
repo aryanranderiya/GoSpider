@@ -15,10 +15,10 @@ func Fetch(url string, wg *sync.WaitGroup, queue *Queue) {
 	req, _ := http.NewRequest("GET", url, nil) // method, url, body
 	req.Header.Set("User-Agent", "GoSpider/1.0")
 
-	response, error := client.Do(req)
+	response, err := client.Do(req)
 
-	if error != nil {
-		fmt.Println("Error while trying to fetch url: ", url, error)
+	if err != nil {
+		fmt.Println("Error while trying to fetch url: ", url, err)
 		return
 	}
 
@@ -31,7 +31,8 @@ func Fetch(url string, wg *sync.WaitGroup, queue *Queue) {
 		return
 	}
 
-	fmt.Println("Successfully fetched url:", url)
+	markdown := ConvertToMarkdown(string(body), url)
+	SaveMarkdownToFile(markdown, url)
 
 	urls := utils.ExtractURLs(string(body))
 
