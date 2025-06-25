@@ -44,8 +44,10 @@ func (q *Queue) Enqueue(urlStr string) {
 		return
 	}
 
-	// Track the domain
-	q.domains[domain] = true
+	// Track the domain (only if it's new and we haven't hit the limit)
+	if !q.domains[domain] {
+		q.domains[domain] = true
+	}
 
 	// Add to queue
 	q.visited[urlStr] = true

@@ -6,15 +6,13 @@ import (
 	"io"
 	"net/http"
 	"sync"
-	"time"
 )
 
 func Fetch(url string, wg *sync.WaitGroup, queue *Queue) {
 	wg.Add(1)
 
-	client := &http.Client{
-		Timeout: 10 * time.Second, // 10 second timeout to prevent hanging
-	}
+	// Create HTTP client with random proxy
+	client := utils.CreateHTTPClientWithProxy()
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("User-Agent", "GoSpider/1.0")
 
