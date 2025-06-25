@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-func ProcessAllUrls(urlChan <-chan string, wg *sync.WaitGroup, queue *Queue, verbose bool) {
+func ProcessAllUrls(urlChan <-chan string, wg *sync.WaitGroup, queue *Queue, downloadImages bool, verbose bool) {
 	// This function runs in a separate goroutine (worker thread)
 	// It reads URLs from the channel and processes them one by one
 	for url := range urlChan {
@@ -13,7 +13,7 @@ func ProcessAllUrls(urlChan <-chan string, wg *sync.WaitGroup, queue *Queue, ver
 			fmt.Println("Processing:", url)
 		}
 		// Download and parse the HTML content
-		Fetch(url, wg, queue, verbose)
+		Fetch(url, wg, queue, downloadImages, verbose)
 
 		// Tell the WaitGroup that this worker has finished processing this URL
 		wg.Done()

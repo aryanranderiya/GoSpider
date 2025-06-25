@@ -16,6 +16,7 @@ func main() {
 	maxURLs := flag.Int("urls", 1000, "Maximum number of URLs to process (default 1000). 0 = unlimited")
 	numWorkers := flag.Int("workers", 5, "Number of concurrent workers (default 5)")
 	useProxies := flag.Bool("proxies", false, "Use proxies from proxies.txt file")
+	downloadImages := flag.Bool("images", false, "Download images found during crawling")
 	verbose := flag.Bool("verbose", false, "Enable verbose output (show found URLs and detailed processing info)")
 
 	// Parse command line flags
@@ -24,7 +25,7 @@ func main() {
 	// Validate required flags
 	if *startURL == "" {
 		fmt.Println("Error: -url flag is required")
-		fmt.Println("Usage: go run main.go -url=https://example.com [-domains=3] [-urls=1000] [-workers=5] [-verbose]")
+		fmt.Println("Usage: go run main.go -url=https://example.com [-domains=3] [-urls=1000] [-workers=5] [-images] [-verbose]")
 		flag.PrintDefaults()
 		return
 	}
@@ -38,6 +39,7 @@ func main() {
 	fmt.Printf("Max URLs: %d\n", *maxURLs)
 	fmt.Printf("Workers: %d\n", *numWorkers)
 	fmt.Printf("Using proxies: %t\n", *useProxies)
+	fmt.Printf("Download images: %t\n", *downloadImages)
 	fmt.Printf("Verbose mode: %t\n", *verbose)
 
 	// Load proxies if requested
@@ -61,7 +63,7 @@ func main() {
 		fmt.Printf("Starting %d workers...\n", *numWorkers)
 	}
 	for i := 0; i < *numWorkers; i++ {
-		go internal.ProcessAllUrls(urlChannel, &wg, queue, *verbose)
+		go internal.ProcessAllUrls(urlChannel, &wg, queue, *downloadImages, *verbose)
 	}
 
 	// Progress reporting ticker (every 1 second)

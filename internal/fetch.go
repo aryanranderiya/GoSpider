@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-func Fetch(url string, wg *sync.WaitGroup, queue *Queue, verbose bool) {
+func Fetch(url string, wg *sync.WaitGroup, queue *Queue, downloadImages bool, verbose bool) {
 	// Use shared HTTP client with connection pooling
 	client := GetHTTPClient(verbose)
 	req, _ := http.NewRequest("GET", url, nil)
@@ -40,7 +40,9 @@ func Fetch(url string, wg *sync.WaitGroup, queue *Queue, verbose bool) {
 
 	// Check if it's an image
 	if utils.IsImage(contentType) {
-		go utils.DownloadImage(body, url, verbose)
+		if downloadImages {
+			go utils.DownloadImage(body, url, verbose)
+		}
 		return
 	}
 
