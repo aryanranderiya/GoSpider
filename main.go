@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"gospider/internal"
 	"sync"
-	"time"
 )
 
 func main() {
@@ -15,34 +14,49 @@ func main() {
 	fmt.Println("Enter the starting url:")
 	fmt.Scanln(&startURL)
 
-	// Initialize your custom queue
+	// Initialize your custom queue - this stores URLs waiting to be processed
 	queue := internal.NewQueue()
-	queue.Enqueue(startURL)
+	queue.Enqueue(startURL) // Add the starting URL to begin crawling
 
-	// Create a channel to hold URLs
-	urlChan := make(chan string, 100) // buffered channel with capacity 100
-	var wg sync.WaitGroup
+	// Create a channel to communicate URLs between main thread and worker threads
+	urlChannel := make(chan string, 100) // buffered channel with capacity 100
+	var wg sync.WaitGroup                // WaitGroup tracks how many workers are currently processing URLs
 
-	// Start one worker (you can add more)
-	go func() {
-		for url := range urlChan {
-			fmt.Println("Processing:", url)
-			time.Sleep(1 * time.Second) // simulate work
-			wg.Done()
-		}
-	}()
+	// Start one worker goroutine (runs in background)
+	// This worker will read URLs from urlChannel and process them
+	go internal.ProcessAllUrls(urlChannel, &wg, queue)
 
-	// Feed from the custom queue to the channel
+	// Main loop: Move URLs from our queue to the channel for workers to process
 	for {
+		// Try to get a URL from the queue
 		url, successfullyPopped := queue.Dequeue()
+
 		if !successfullyPopped {
-			break // queue is empty
+			// Queue is empty right now, but workers might still be running  and could add more URLs to the queue
+
+			// Wait for all current workers to finish their tasks
+			if wg.Wait(); true {
+				// Now that all workers are done, check if they added any new URLs
+				url, successfullyPopped = queue.Dequeue()
+				if !successfullyPopped {
+					// Queue is still empty and no workers are running
+					// This means we've processed everything - time to exit
+					break
+				}
+				// Found a new URL! Tell WaitGroup we're starting another task
+				wg.Add(1)
+				urlChannel <- url // Send URL to worker
+				continue          // Go back to start of loop
+			}
+			break // This should never happen due to the 'true' condition above
 		}
 
-		wg.Add(1)
-		urlChan <- url
+		// We got a URL from the queue successfully
+		wg.Add(1)         // Tell WaitGroup we're starting a new task
+		urlChannel <- url // Send the URL to worker for processing
 	}
 
-	wg.Wait()
-	close(urlChan)
+	// Close the channel to tell the worker goroutine to stop
+	// This signals that no more URLs will be sent
+	close(urlChannel)
 }
