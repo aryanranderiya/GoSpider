@@ -5,11 +5,20 @@ import (
 	"fmt"
 	"gospider/internal"
 	"gospider/utils"
+	"io"
+	"os"
 	"sync"
 	"time"
 )
 
 func main() {
+
+	// Print ascii art
+	f, _ := os.Open("ascii.txt")
+	defer f.Close()
+	data, _ := io.ReadAll(f)
+	fmt.Println(string(data))
+
 	// Define command line flags
 	startURL := flag.String("url", "", "Starting URL to crawl (required)")
 	maxDomains := flag.Int("domains", 100, "Maximum number of domains to crawl (default 100)")
@@ -34,7 +43,7 @@ func main() {
 	// Record start time
 	startTime := time.Now()
 
-	fmt.Println("\nwelcome to gospider by aryan randeriya")
+	fmt.Println("\nwelcome to gospider by aryan randeriya \n\n")
 	fmt.Printf("Starting URL: %s\n", *startURL)
 	fmt.Printf("Max domains: %d\n", *maxDomains)
 	fmt.Printf("Max URLs: %d\n", *maxURLs)

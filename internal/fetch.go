@@ -56,7 +56,7 @@ func Fetch(url string, wg *sync.WaitGroup, queue *Queue, downloadImages bool, sa
 
 	// Process HTML content
 	markdown := ConvertToMarkdown(string(body), url)
-	
+
 	// Save to file only if saveFiles flag is enabled
 	if saveFiles {
 		SaveMarkdownToFile(markdown, url, verbose)
