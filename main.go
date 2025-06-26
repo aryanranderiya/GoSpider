@@ -17,6 +17,7 @@ func main() {
 	numWorkers := flag.Int("workers", 5, "Number of concurrent workers (default 5)")
 	useProxies := flag.Bool("proxies", false, "Use proxies from proxies.txt file")
 	downloadImages := flag.Bool("images", false, "Download images found during crawling")
+	saveFiles := flag.Bool("save", false, "Save markdown files to disk (default false)")
 	verbose := flag.Bool("verbose", false, "Enable verbose output (show found URLs and detailed processing info)")
 
 	// Parse command line flags
@@ -40,6 +41,7 @@ func main() {
 	fmt.Printf("Workers: %d\n", *numWorkers)
 	fmt.Printf("Using proxies: %t\n", *useProxies)
 	fmt.Printf("Download images: %t\n", *downloadImages)
+	fmt.Printf("Save files: %t\n", *saveFiles)
 	fmt.Printf("Verbose mode: %t\n", *verbose)
 
 	// Load proxies if requested
@@ -63,7 +65,7 @@ func main() {
 		fmt.Printf("Starting %d workers...\n", *numWorkers)
 	}
 	for i := 0; i < *numWorkers; i++ {
-		go internal.ProcessAllUrls(urlChannel, &wg, queue, *downloadImages, *verbose)
+		go internal.ProcessAllUrls(urlChannel, &wg, queue, *downloadImages, *saveFiles, *verbose)
 	}
 
 	// Progress reporting ticker (every 1 second)
@@ -97,7 +99,7 @@ func main() {
 				seconds := int(elapsed.Seconds()) % 60
 				timeStr := fmt.Sprintf("%dm%ds", minutes, seconds)
 
-				fmt.Printf("🕷️  Processing: %d/%s URLs sent to workers | ✅ %d completed | 🌐 %d/%d domains (%.1f%%) | 📋 %d queued | ⚡ %.1f URLs/sec | ⏱️ %s\n",
+				fmt.Printf("Processing: %d/%s URLs sent to workers | %d completed | %d/%d domains (%.1f%%) | %d queued | %.1f URLs/sec | %s\n",
 					processedCount, maxUrlsDisplay, completedCount, domainsCount, *maxDomains, domainPercent, queueSize, rate, timeStr)
 			}
 		}
@@ -181,7 +183,7 @@ func main() {
 		seconds := int(elapsed.Seconds()) % 60
 		timeStr := fmt.Sprintf("%dm%ds", minutes, seconds)
 
-		fmt.Printf("🏁 Final: %d/%s URLs sent to workers | ✅ %d completed | 🌐 %d/%d domains (%.1f%%) | 📋 %d queued | ⚡ %.1f URLs/sec | ⏱️ %s\n",
+		fmt.Printf("Final: %d/%s URLs sent to workers | %d completed | %d/%d domains (%.1f%%) | %d queued | %.1f URLs/sec | %s\n",
 			processedCount, maxUrlsDisplay, completedCount, domainsCount, *maxDomains, domainPercent, queueSize, rate, timeStr)
 	}
 
@@ -215,15 +217,15 @@ func main() {
 		successRate = 0
 	}
 
-	// Print final statistics with emojis and better formatting
-	fmt.Printf("\n🎉 === Crawling Complete === 🎉\n")
-	fmt.Printf("⏱️  Total execution time: %s\n", timeDisplay)
-	fmt.Printf("🌐 Unique URLs discovered: %s\n", formatNumber(visitedCount))
-	fmt.Printf("📤 URLs sent to workers: %s\n", formatNumber(processedCount))
-	fmt.Printf("✅ URLs successfully processed: %s (%.1f%% success rate)\n", formatNumber(completedCount), successRate)
-	fmt.Printf("🏠 Domains processed: %s\n", formatNumber(domainsCount))
-	fmt.Printf("📋 URLs remaining in queue: %s\n", formatNumber(queueSize))
-	fmt.Printf("⚡ Processing rate: %.1f URLs/second\n", urlsPerSecond)
+	// Print final statistics with better formatting
+	fmt.Printf("\n=== Crawling Complete ===\n")
+	fmt.Printf("Total execution time: %s\n", timeDisplay)
+	fmt.Printf("Unique URLs discovered: %s\n", formatNumber(visitedCount))
+	fmt.Printf("URLs sent to workers: %s\n", formatNumber(processedCount))
+	fmt.Printf("URLs successfully processed: %s (%.1f%% success rate)\n", formatNumber(completedCount), successRate)
+	fmt.Printf("Domains processed: %s\n", formatNumber(domainsCount))
+	fmt.Printf("URLs remaining in queue: %s\n", formatNumber(queueSize))
+	fmt.Printf("Processing rate: %.1f URLs/second\n", urlsPerSecond)
 }
 
 // formatNumber adds commas to large numbers for better readability

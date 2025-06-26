@@ -246,8 +246,8 @@ func CreateHTTPClientWithTestedProxy(verbose bool) *http.Client {
 					transport := &http.Transport{
 						Proxy:                 http.ProxyURL(proxyURL),
 						MaxIdleConns:          2000,
-						MaxIdleConnsPerHost:   50,  // Reduced to avoid overwhelming servers
-						MaxConnsPerHost:       50,  // Reduced to avoid overwhelming servers
+						MaxIdleConnsPerHost:   500,  // Increased for 1000 workers
+						MaxConnsPerHost:       500,  // Increased for 1000 workers
 						IdleConnTimeout:       90 * time.Second,
 						TLSHandshakeTimeout:   10 * time.Second, // Increased for slow connections
 						ResponseHeaderTimeout: 20 * time.Second, // Increased for slow responses
@@ -279,8 +279,8 @@ func CreateHTTPClientWithTestedProxy(verbose bool) *http.Client {
 	// Optimized direct connection with connection pooling
 	client.Transport = &http.Transport{
 		MaxIdleConns:          2000,
-		MaxIdleConnsPerHost:   50,  // Reduced to avoid overwhelming servers
-		MaxConnsPerHost:       50,  // Reduced to avoid overwhelming servers
+		MaxIdleConnsPerHost:   500,  // Increased for 1000 workers
+		MaxConnsPerHost:       500,  // Increased for 1000 workers
 		IdleConnTimeout:       90 * time.Second,
 		TLSHandshakeTimeout:   10 * time.Second, // Increased for slow connections
 		ResponseHeaderTimeout: 20 * time.Second, // Increased for slow responses

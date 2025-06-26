@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-func Fetch(url string, wg *sync.WaitGroup, queue *Queue, downloadImages bool, verbose bool) {
+func Fetch(url string, wg *sync.WaitGroup, queue *Queue, downloadImages bool, saveFiles bool, verbose bool) {
 	// Use shared HTTP client with connection pooling
 	client := GetHTTPClient(verbose)
 	req, _ := http.NewRequest("GET", url, nil)
@@ -56,7 +56,11 @@ func Fetch(url string, wg *sync.WaitGroup, queue *Queue, downloadImages bool, ve
 
 	// Process HTML content
 	markdown := ConvertToMarkdown(string(body), url)
-	SaveMarkdownToFile(markdown, url, verbose)
+	
+	// Save to file only if saveFiles flag is enabled
+	if saveFiles {
+		SaveMarkdownToFile(markdown, url, verbose)
+	}
 
 	urls := utils.ExtractURLs(string(body))
 	urls_md := utils.ExtractURLs(markdown)
