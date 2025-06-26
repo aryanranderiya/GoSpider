@@ -43,7 +43,7 @@ func main() {
 	// Record start time
 	startTime := time.Now()
 
-	fmt.Println("\nwelcome to gospider by aryan randeriya \n\n")
+	fmt.Println("\nwelcome to gospider by aryan randeriya")
 	fmt.Printf("Starting URL: %s\n", *startURL)
 	fmt.Printf("Max domains: %d\n", *maxDomains)
 	fmt.Printf("Max URLs: %d\n", *maxURLs)
