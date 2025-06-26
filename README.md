@@ -1,9 +1,11 @@
-# GoSpider 🕷️
-
-[![Go Version](https://img.shields.io/badge/Go-1.24.4-blue.svg)](https://golang.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+# GoSpider 🕷️  [![Go Version](https://img.shields.io/badge/Go-1.24.4-blue.svg)](https://golang.org/) [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 A high-performance, concurrent web crawler written in Go that extracts URLs, downloads content, and converts web pages to markdown format.
+
+
+> [!IMPORTANT]
+> ⭐ **Pleae Star this repository if you find it useful!**
+
 
 ![Gospider (1)](https://github.com/user-attachments/assets/cf1e9a52-f372-4b34-a1a3-ff82b18844e1)
 
@@ -153,11 +155,11 @@ GoSpider's concurrency model is built around Go's CSP (Communicating Sequential 
 
 | Metric | Value | Description |
 |--------|-------|-------------|
-| URL Processing Rate | 100-1000/sec | Depends on network latency and content size |
-| Memory Usage | ~500MB-2GB | For 50,000 URLs with typical web content |
+| URL Processing Rate | 10-100/sec | Depends on network latency and content size |
+| Memory Usage | ~500MB | For 100,000 URLs with typical web content |
 | Concurrent Connections | Up to 500/host | Configurable via HTTP client settings |
 | File Write Throughput | 50-100 MB/s | With SSD and parallel writers |
-| Startup Time | <1 second | Including proxy validation |
+| Startup Time | ~1-2 second | Including proxy validation |
 
 ### Error Handling Strategy
 
@@ -178,7 +180,7 @@ GoSpider's concurrency model is built around Go's CSP (Communicating Sequential 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/gospider.git
+git clone https://github.com/aryanranderiya/gospider.git
 cd gospider
 
 # Install dependencies
@@ -194,12 +196,12 @@ go build -o gospider cmd/main.go
 ### Option 2: Using Go Install
 
 ```bash
-go install github.com/yourusername/gospider/cmd@latest
+go install github.com/aryanranderiya/gospider/cmd@latest
 ```
 
 ### Option 3: Download Binary
 
-Download the latest binary from the [releases page](https://github.com/yourusername/gospider/releases).
+Download the latest binary from the [releases page](https://github.com/aryanranderiya/gospider/releases).
 
 ## 🔍 How It Works
 
@@ -230,27 +232,6 @@ Download the latest binary from the [releases page](https://github.com/yourusern
    - Closes file writers
    - Displays final statistics
 
-### URL Extraction Algorithm
-
-GoSpider uses a dual-extraction approach:
-
-1. **HTML Extraction**:
-   - Parses `<a href>` tags
-   - Extracts from `<link>` elements
-   - Finds URLs in `<script>` tags
-   - Discovers in inline styles
-
-2. **Markdown Extraction**:
-   - Parses `[text](url)` patterns
-   - Extracts reference-style links
-   - Finds bare URLs in text
-
-3. **URL Normalization**:
-   - Converts relative to absolute URLs
-   - Handles protocol-relative URLs
-   - Cleans query parameters
-   - Removes fragments
-
 ## 🚀 Usage
 
 ### Basic Usage
@@ -280,6 +261,20 @@ GoSpider uses a dual-extraction approach:
 
 # Save everything with detailed logging
 ./gospider -url="https://example.com" -save -images -verbose -domains=100
+```
+
+### Examples of Usage 
+
+
+```
+go run main.go -url=https://en.wikipedia.org/wiki/Apple_Inc. -workers=1000 -domains=1 -urls=100000
+go run main.go -url=https://books.toscrape.com/ -workers=1000 -domains=1 -urls=100000
+go run main.go -url=https://paulgraham.com/ -workers=1000 -domains=1 -urls=100000
+go run main.go -url=https://quotes.toscrape.com/ -workers=1000 -domains=1 -urls=100000
+go run main.go -url=https://iep.utm.edu/ -workers=1000 -domains=1 -urls=100000
+go run main.go -url=https://gobyexample.com/ -workers=1000 -domains=1 -urls=100000
+go run main.go -url=https://aryanranderiya.com -workers=1000 -domains=1 -urls=100000
+
 ```
 
 ### Command Line Options
@@ -341,53 +336,8 @@ Proxy features:
 - Failure tracking and blacklisting
 - Transparent fallback to direct connection
 
-### Performance Tuning
-
-#### For Maximum Speed
-```bash
-./gospider -url="https://example.com" -workers=50 -urls=0
 ```
-
-#### For Polite Crawling
-```bash
-./gospider -url="https://example.com" -workers=2 -domains=10
-```
-
-#### For Large Archives
-```bash
-./gospider -url="https://example.com" -workers=20 -save -images -domains=500
-```
-
-## 🤝 Contributing
-
-We welcome contributions! Please follow these guidelines:
-
-### Getting Started
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes
-4. Add tests for new functionality
-5. Run tests: `go test ./...`
-6. Commit changes: `git commit -m 'Add amazing feature'`
-7. Push to branch: `git push origin feature/amazing-feature`
-8. Open a Pull Request
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👤 Author
-
-**Aryan Randeriya**
-
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Email: your.email@example.com
-
-## 🙏 Acknowledgments
-
-- [html-to-markdown](https://github.com/JohannesKaufmann/html-to-markdown) for HTML conversion
-- Go community for excellent concurrency primitives
-- Contributors and testers
-
-⭐ **Star this repository if you find it useful!**
