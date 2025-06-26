@@ -14,7 +14,7 @@ import (
 func main() {
 
 	// Print ascii art
-	f, _ := os.Open("ascii.txt")
+	f, _ := os.Open("../ascii.txt")
 	defer f.Close()
 	data, _ := io.ReadAll(f)
 	fmt.Println(string(data))
