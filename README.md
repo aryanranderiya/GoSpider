@@ -5,11 +5,19 @@
 
 A high-performance, concurrent web crawler written in Go that extracts URLs, downloads content, and converts web pages to markdown format.
 
+![Gospider (1)](https://github.com/user-attachments/assets/cf1e9a52-f372-4b34-a1a3-ff82b18844e1)
+
+
+
 ## 🎯 Overview
 
 GoSpider is a multi-threaded web crawler that leverages Go's concurrency primitives to crawl websites at scale. It implements a producer-consumer architecture with configurable worker pools, allowing it to process thousands of URLs simultaneously while maintaining memory efficiency and system stability.
 
 The crawler is designed for various use cases including web archiving, content analysis, search engine development, and data mining. It handles cross-domain crawling, maintains URL deduplication, and provides real-time progress monitoring.
+
+
+![Code 2025-06-26 06 07 43](https://github.com/user-attachments/assets/5bd5026f-db0f-4790-9f21-1b037920423f)
+
 
 ### Key Features
 
